@@ -344,7 +344,7 @@ Notifications = {
 local player_vehicle = samem.cast('CVehicle **', samem.player_vehicle)
 -- auto updates
 local lmPath = "MikuProjectReborn.lua"
-local lmUrl = "https://raw.githubusercontent.com/MikuImpulse/Miku-Lua-AutoUpdates/main/MikuProjectReborn.lua"
+local lmUrl = "https://github.com/MikuImpulse/Miku-Lua-Beta/raw/refs/heads/main/MikuProjectReborn.lua"
 local updfont = {}
 -- togglebutton
 local AI_TOGGLE = {}
