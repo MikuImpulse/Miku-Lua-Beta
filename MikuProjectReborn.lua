@@ -2301,7 +2301,7 @@ function main()
         end
         if settings.car.fastbrake[0] then
             if isCharInAnyCar(PLAYER_PED) then
-                if isWidgetPressed(WIDGET_HANDBRAKE) then
+                if isWidgetPressed(WIDGET_HORN) then
                     local posX, posY, posZ = getCarCoordinates(storeCarCharIsInNoSave(PLAYER_PED))
                     setCarCoordinates(storeCarCharIsInNoSave(PLAYER_PED), posX, posY, posZ)
                 end
