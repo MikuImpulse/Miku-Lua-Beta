@@ -1,5 +1,5 @@
 -------Версия скрипта--------
-local script_ver = '1.2.3_beta1'
+local script_ver = '1.2.3_beta3'
 --------О скрипте--------
 script_name('Miku Project Reborn')
 script_version(script_ver)
@@ -99,7 +99,10 @@ local ini = inicfg.load({
         sbiv = (false),
         autoscroll = (false),
         pt = (1),
-        wait = (200)
+        wait = (200),
+        nofall = (false),
+        changefov = (false),
+        fovvalue = (101)
     },
     car = {
         godmode2_enabled = (false),
@@ -115,7 +118,9 @@ local ini = inicfg.load({
 		fastenter = (false),
 		infinitefuel = (false),
 		fastexit = (false),
-		fastbrake = (false)
+		fastbrake = (false),
+        jumpcar = (false),
+        anticarskill = (false)
     },
     render = {
         ruda = (false),
@@ -224,7 +229,10 @@ local settings = {
         sbiv = imgui.new.bool(ini.ped.sbiv),
         autoscroll = imgui.new.bool(ini.ped.autoscroll),
         pt = imgui.new.int(ini.ped.pt),
-        wait = imgui.new.int(ini.ped.wait)
+        wait = imgui.new.int(ini.ped.wait),
+        nofall = imgui.new.bool(ini.ped.nofall),
+        changefov = imgui.new.bool(ini.ped.changefov),
+        fovvalue = imgui.new.int(ini.ped.fovvalue)
     },
     car = {
         godmode2_enabled = imgui.new.bool(ini.car.godmode2_enabled),
@@ -240,7 +248,9 @@ local settings = {
         fastenter = imgui.new.bool(ini.car.fastenter),
         infinitefuel = imgui.new.bool(ini.car.infinitefuel),
         fastexit = imgui.new.bool(ini.car.fastexit),
-        fastbrake = imgui.new.bool(ini.car.fastbrake)
+        fastbrake = imgui.new.bool(ini.car.fastbrake),
+        jumpcar = imgui.new.bool(ini.car.jumpcar),
+        anticarskill = imgui.new.bool(ini.car.anticarskill)
     },
     render = {
         ruda = imgui.new.bool(ini.render.ruda),
@@ -1253,6 +1263,26 @@ imgui.OnFrame(function() return window_state[0] end, function()
                     end
                 end
                 imgui.PopItemWidth()
+                if imgui.ToggleButton(u8'Анти падение', settings.ped.nofall) then
+                    if settings.cfg.autosave[0] then
+                        ini.ped.nofall = settings.ped.nofall[0]
+                        save()
+                    end
+                end
+                if imgui.ToggleButton(u8'Поле зрения', settings.ped.changefov) then
+                    if settings.cfg.autosave[0] then
+                        ini.ped.changefov = settings.ped.changefov[0]
+                        save()
+                    end
+                end
+                imgui.PushItemWidth(200)
+                if imgui.SliderInt(u8"Значение FOV'a", settings.ped.fovvalue, 50, 130) then
+                    if settings.cfg.autosave[0] then
+                        ini.ped.fovvalue = settings.ped.fovvalue[0]
+                        save()
+                    end
+                end
+                imgui.PopItemWidth()
             elseif subtab_2 == 2 then
                 if imgui.ToggleButton(u8'Silent Aim', settings.silent.salo) then
                     if settings.cfg.autosave[0] then
@@ -1429,6 +1459,18 @@ imgui.OnFrame(function() return window_state[0] end, function()
                 if imgui.ToggleButton(u8'Быстрый тормоз + флип', settings.car.fastbrake) then
                     if settings.cfg.autosave[0] then
                         ini.car.fastbrake = settings.car.fastbrake[0]
+                        save()
+                    end
+                end
+                if imgui.ToggleButton(u8'Прыжок авто (start)', settings.car.jumpcar) then
+                    if settings.cfg.autosave[0] then
+                        ini.car.jumpcar = settings.car.jumpcar[0]
+                        save()
+                    end
+                end
+                if imgui.ToggleButton(u8'Анти карскилл', settings.car.anticarskill) then
+                    if settings.cfg.autosave[0] then
+                        ini.car.anticarskill = settings.car.anticarskill[0]
                         save()
                     end
                 end
@@ -1957,6 +1999,9 @@ imgui.OnFrame(function() return window_state[0] end, function()
                         ini.ped.autoscroll = settings.ped.autoscroll[0]
                         ini.ped.pt = settings.ped.pt[0]
                         ini.ped.wait = settings.ped.wait[0]
+                        ini.ped.nofall = settings.ped.nofall[0]
+                        ini.ped.changefov = settings.ped.changefov[0]
+                        ini.ped.fovvalue = settings.ped.fovvalue[0]
                         ini.car.godmode2_enabled = settings.car.godmode2_enabled[0]
                         ini.car.flycar = settings.car.flycar[0]
                         ini.car.nobike = settings.car.nobike[0]
@@ -1971,6 +2016,8 @@ imgui.OnFrame(function() return window_state[0] end, function()
                         ini.car.infinitefuel = settings.car.infinitefuel[0]
                         ini.car.fastexit = settings.car.fastexit[0]
                         ini.car.fastbrake = settings.car.fastbrake[0]
+                        ini.car.jumpcar = settings.car.jumpcar[0]
+                        ini.car.anticarskill = settings.car.anticarskill[0]
                         ini.render.ruda = settings.render.ruda[0]
                         ini.render.narkotiki = settings.render.narkotiki[0]
                         ini.render.podarok = settings.render.podarok[0]
@@ -2178,11 +2225,12 @@ function bringVec2To(from, to, start_time, duration)
     return (timer > duration) and to or from, false
 end
 
-------main()------
+------main func------
 function main()
     checkResFolder()
     clearTags()
     check_update()
+    antifall()
     while not isSampAvailable() do wait(0) end
     sampRegisterChatCommand('miku', function() window_state[0] = not window_state[0] end)
     sampRegisterChatCommand('jump', function()
@@ -2209,6 +2257,17 @@ function main()
     end)
     while true do wait(0)
         while not sampIsLocalPlayerSpawned() do wait(0) end
+        if settings.ped.changefov[0] then
+            cameraSetLerpFov(settings.ped.fovvalue[0], settings.ped.fovvalue[0], 1000, true)
+        end
+        if settings.car.jumpcar[0] and isCharInAnyCar(PLAYER_PED) then
+            if isWidgetPressed(WIDGET_SCHOOL_START) then
+                local x, y, z = getCarSpeedVector(storeCarCharIsInNoSave(PLAYER_PED))
+                if z < 7 then
+                    applyForceToCar(storeCarCharIsInNoSave(PLAYER_PED), 0, 0, 0.2, 0, 0, 0)
+                end
+            end
+        end
         if settings.ped.autoscroll[0] then
             if getCurrentCharWeapon(PLAYER_PED) ~= 0 then
                 for k, v in ipairs(guns) do
@@ -4307,7 +4366,18 @@ imgui.OnFrame(function() return settings.ESP.drawing[0] end, function(self)
                 local hr, headx, heady = convert3DCoordsToScreenEx(hx, hy, hz + 0.25)
                 if hr then
                     local nickname = sampGetPlayerNickname(id)
-                    local nametag = nickname .. ' [' .. tostring(id) .. ']'
+                    if settings.ESP.enabled_health[0] and not settings.ESP.enabled_armor[0] then
+                        nametag = nickname .. ' [' .. tostring(id) .. '] - ' .. string.format("%.0f", sampGetPlayerArmor(id)) .. 'ap'
+                    end
+                    if settings.ESP.enabled_armor[0] and not settings.ESP.enabled_health[0]  then
+                        nametag = nickname .. ' [' .. tostring(id) .. '] - ' .. string.format("%.0f", sampGetPlayerHealth(id)) .. 'hp'
+                    end
+                    if settings.ESP.enabled_health[0] and settings.ESP.enabled_armor[0] then
+                        nametag = nickname .. ' [' .. tostring(id) .. ']'
+                    end
+                    if not settings.ESP.enabled_health[0] and not settings.ESP.enabled_armor[0] then
+                        nametag = nickname .. ' [' .. tostring(id) .. '] - ' .. string.format("%.0f", sampGetPlayerHealth(id)) .. 'hp ' .. string.format("%.0f", sampGetPlayerArmor(id)) .. 'ap'
+                    end
                     local nametag_len = imgui.CalcTextSize(nametag)
                     local oox, ooy = getScreenResolution()
                     local nametag_x = oox - nametag_len.x / 2
@@ -4473,16 +4543,35 @@ end
 
 -- for filled box --
 function get_player_color_imvec4_2(id)
-  local color = sampGetPlayerColor(id)
-  local opaquee_color = bit.bor(bit.band(color, 0xFFFFFF), 0xFF000000)
+    local color = sampGetPlayerColor(id)
+    local opaquee_color = bit.bor(bit.band(color, 0xFFFFFF), 0xFF000000)
 
-  local r = bit.band(bit.rshift(opaquee_color, 16), 0xFF)
-  local g = bit.band(bit.rshift(opaquee_color, 8), 0xFF)
-  local b = bit.band(opaquee_color, 0xFF)
+    local r = bit.band(bit.rshift(opaquee_color, 16), 0xFF)
+    local g = bit.band(bit.rshift(opaquee_color, 8), 0xFF)
+    local b = bit.band(opaquee_color, 0xFF)
 
-  local r_float = r / 255.0
-  local g_float = g / 255.0
-  local b_float = b / 255.0
+    local r_float = r / 255.0
+    local g_float = g / 255.0
+    local b_float = b / 255.0
 
   return imgui.ImVec4(r_float, g_float, b_float, settings.ESP.fillboxvalue[0])
+end
+
+-- no fall
+function antifall()
+    lua_thread.create(function()
+        while settings.ped.nofall[0] do -- no falltaskPlayAnim(playerPed HANDSUP PED 4.0 0 0 0 0 4)
+            wait(0)
+            if isCharPlayingAnim(playerPed, 'KO_SKID_BACK') or isCharPlayingAnim(playerPed, 'FALL_COLLAPSE') then
+                clearCharTasksImmediately(playerPed)
+            end
+        end
+    end)
+end
+
+-- anti car skill
+function events.onSendVehicleDamaged()
+	if settings.car.anticarskill[0] then
+		return false
+	end
 end
