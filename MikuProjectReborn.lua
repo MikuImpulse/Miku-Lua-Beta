@@ -554,7 +554,7 @@ function Fonts_Init()
     updfont[33] = imgui.GetIO().Fonts:AddFontFromFileTTF(path, 33.0, nil, glyph_ranges)
     updfont[40] = imgui.GetIO().Fonts:AddFontFromFileTTF(path, 40.0, nil, glyph_ranges)
     updfont[30] = imgui.GetIO().Fonts:AddFontFromFileTTF(path, 30.0, nil, glyph_ranges)
-    waterfont = imgui.GetIO().Fonts:AddFontFromFileTTF(path2, 35.0, nil, glyph_ranges)
+    waterfont = imgui.GetIO().Fonts:AddFontFromFileTTF(path2, 27.0 * MONET_DPI_SCALE, nil, glyph_ranges)
     upd1 = imgui.GetIO().Fonts:AddFontFromFileTTF(path2, 33.0, nil, glyph_ranges)
     upd2 = imgui.GetIO().Fonts:AddFontFromFileTTF(path2, 25.0, nil, glyph_ranges)
 end
@@ -841,7 +841,7 @@ imgui.OnFrame(function() return window_state[0] end, function()
         imgui.EndChild()
     end
     imgui.PopStyleColor(3)
-    imgui.SetCursorPos(imgui.ImVec2(238, 20))
+    imgui.SetCursorPos(imgui.ImVec2(180 * MONET_DPI_SCALE, 15 * MONET_DPI_SCALE))
     if imgui.BeginChild("##MenuT", imgui.ImVec2(652 * MONET_DPI_SCALE, 458 * MONET_DPI_SCALE), false) then
         if tab == 1 then
             imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.16, 0.16, 0.18, 1.00))
@@ -4373,7 +4373,7 @@ end
 -- watermark
 imgui.OnFrame(function() return settings.menu.watermark[0] end, function(self)
     imgui.SetNextWindowPos(imgui.ImVec2(25, 15), imgui.Cond.FirstUseEver)
-    imgui.SetNextWindowSize(imgui.ImVec2(300 * MONET_DPI_SCALE, 48 * MONET_DPI_SCALE), imgui.Cond.Always)
+    imgui.SetNextWindowSize(imgui.ImVec2(275 * MONET_DPI_SCALE, 38 * MONET_DPI_SCALE), imgui.Cond.Always)
     imgui.PushStyleColor(imgui.Col.WindowBg, imgui.ImVec4(0.12, 0.12, 0.14, 0.70))
     imgui.PushStyleColor(imgui.Col.Text, imgui.ImVec4(0.90, 0.90, 0.93, 0.85))
     imgui.Begin("##minet", settings.menu.watermark, imgui.WindowFlags.NoMove + imgui.WindowFlags.NoTitleBar + imgui.WindowFlags.NoInputs + imgui.WindowFlags.NoScrollbar)
